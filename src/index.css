@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-serif: 'DM Serif Display', serif;
+  --font-sans: 'Manrope', sans-serif;
+
+  --color-cream: #F8F7F4;
+  --color-primary: #183A3A;
+  --color-primary-dark: #122b2b;
+  --color-ink: #172020;
+  --color-muted: #657070;
+  --color-border: #DDE2DF;
+  --color-accent: #2D5F5F;
+  --color-surface: #FFFFFF;
+  --color-sage: #EEF2EF;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background-color: #F8F7F4;
+  color: #172020;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDE2DF;
+  border-radius: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid #183A3A;
+  outline-offset: 2px;
+  border-radius: 1px;
+}

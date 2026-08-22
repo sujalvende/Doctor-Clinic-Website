@@ -1,0 +1,10 @@
+{
+  "description": "Enhance your online experience with a platform that curates trustworthy content, ensuring a clean and reliable web environment for users.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
