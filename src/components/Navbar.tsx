@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 import { Menu, X } from "lucide-react";
 import { CLINIC, DOCTOR } from "../data/content";
@@ -15,11 +15,11 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const previousBodyOverflow = useRef<string | null>(null);
+  const previousHtmlOverflow = useRef<string | null>(null);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
-    document.body.style.overflow = "";
-    document.documentElement.style.overflow = "";
   }, []);
 
   useEffect(() => {
@@ -30,17 +30,26 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const bodyStyle = document.body.style;
+    const htmlStyle = document.documentElement.style;
+
     if (menuOpen) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
+      previousBodyOverflow.current = bodyStyle.overflow;
+      previousHtmlOverflow.current = htmlStyle.overflow;
+      bodyStyle.overflow = "hidden";
+      htmlStyle.overflow = "hidden";
     } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
+      bodyStyle.overflow = previousBodyOverflow.current ?? "";
+      htmlStyle.overflow = previousHtmlOverflow.current ?? "";
+      previousBodyOverflow.current = null;
+      previousHtmlOverflow.current = null;
     }
 
     return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
+      bodyStyle.overflow = previousBodyOverflow.current ?? "";
+      htmlStyle.overflow = previousHtmlOverflow.current ?? "";
+      previousBodyOverflow.current = null;
+      previousHtmlOverflow.current = null;
     };
   }, [menuOpen]);
 

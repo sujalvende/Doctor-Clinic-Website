@@ -377,11 +377,12 @@ function RescheduleModal({
       }
     }
 
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKey);
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKey);
     };
   }, [onClose]);
@@ -518,9 +519,15 @@ export default function Dashboard() {
   useEffect(() => {
     if (!selected) return;
 
-    document.body.style.overflow = "hidden";
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelected(null);
+      }
+    }
+
+    document.addEventListener("keydown", handleKey);
     return () => {
-      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKey);
     };
   }, [selected]);
 
