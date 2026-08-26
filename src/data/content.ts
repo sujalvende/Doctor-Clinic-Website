@@ -186,15 +186,30 @@ export interface Appointment {
   service: string;
   preferred_date: string;
   preferred_time: string;
+  confirmed_date?: string;
+  confirmed_time?: string;
   message: string;
   status: AppointmentStatus;
   created_at: string;
   updated_at: string;
 }
 
+function persistAppointments(appointments: Appointment[]) {
+  localStorage.setItem("clinic_appointments", JSON.stringify(appointments));
+}
+
+function normalizeAppointment(raw: Appointment): Appointment {
+  return {
+    ...raw,
+    confirmed_date: raw.confirmed_date || "",
+    confirmed_time: raw.confirmed_time || "",
+  };
+}
+
 export function getAppointments(): Appointment[] {
   try {
-    return JSON.parse(localStorage.getItem("clinic_appointments") || "[]");
+    const appointments = JSON.parse(localStorage.getItem("clinic_appointments") || "[]") as Appointment[];
+    return appointments.map(normalizeAppointment);
   } catch {
     return [];
   }
@@ -203,15 +218,15 @@ export function getAppointments(): Appointment[] {
 export function saveAppointment(data: Omit<Appointment, "id" | "status" | "created_at" | "updated_at">): Appointment {
   const appointments = getAppointments();
   const now = new Date().toISOString();
-  const apt: Appointment = {
+  const apt: Appointment = normalizeAppointment({
     ...data,
     id: `apt_${Date.now()}`,
     status: "pending",
     created_at: now,
     updated_at: now,
-  };
+  });
   appointments.push(apt);
-  localStorage.setItem("clinic_appointments", JSON.stringify(appointments));
+  persistAppointments(appointments);
   return apt;
 }
 
@@ -221,6 +236,28 @@ export function updateAppointmentStatus(id: string, status: AppointmentStatus): 
   if (idx !== -1) {
     appointments[idx].status = status;
     appointments[idx].updated_at = new Date().toISOString();
-    localStorage.setItem("clinic_appointments", JSON.stringify(appointments));
+    persistAppointments(appointments);
   }
+}
+
+export function rescheduleAppointment(id: string, confirmed_date: string, confirmed_time: string): Appointment | null {
+  const appointments = getAppointments();
+  const idx = appointments.findIndex((a) => a.id === id);
+
+  if (idx === -1) {
+    return null;
+  }
+
+  const current = appointments[idx];
+  const next: Appointment = {
+    ...current,
+    confirmed_date,
+    confirmed_time,
+    status: current.status === "cancelled" || current.status === "completed" ? current.status : "rescheduled",
+    updated_at: new Date().toISOString(),
+  };
+
+  appointments[idx] = next;
+  persistAppointments(appointments);
+  return next;
 }

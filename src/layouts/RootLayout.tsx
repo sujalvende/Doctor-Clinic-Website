@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { useEffect } from "react";
 import { Phone, MessageCircle, Calendar } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -39,13 +39,13 @@ export default function RootLayout() {
             <MessageCircle size={17} />
             <span className="text-[10px] tracking-wide">WhatsApp</span>
           </a>
-          <a
-            href="/visit"
+          <Link
+            to="/visit"
             className="flex flex-col items-center justify-center gap-1 bg-primary text-surface"
           >
             <Calendar size={17} />
             <span className="text-[10px] tracking-wide">Book</span>
-          </a>
+          </Link>
         </div>
       </div>
 

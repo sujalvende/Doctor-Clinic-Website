@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, NavLink } from "react-router";
+import { useState, useEffect, useCallback } from "react";
+import { Link, NavLink, useLocation } from "react-router";
 import { Menu, X } from "lucide-react";
 import { CLINIC, DOCTOR } from "../data/content";
 
@@ -14,18 +14,39 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    if (menuOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
   }, [menuOpen]);
+
+  useEffect(() => {
+    closeMenu();
+  }, [location.pathname, closeMenu]);
 
   return (
     <header
@@ -37,7 +58,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 lg:h-20 flex items-center justify-between">
         {/* Brand */}
-        <Link to="/" className="flex-shrink-0 group" onClick={() => setMenuOpen(false)}>
+        <Link to="/" className="flex-shrink-0 group" onClick={closeMenu}>
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase font-medium leading-none mb-0.5">
             {CLINIC.name}
           </p>
@@ -73,23 +94,31 @@ export default function Navbar() {
 
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          className="lg:hidden p-2 -mr-2 text-ink"
+          className="lg:hidden relative z-[70] p-2 -mr-2 text-ink"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-navigation"
         >
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && (
-        <div className="lg:hidden fixed inset-0 top-16 bg-surface z-40 overflow-y-auto">
-          <nav className="max-w-7xl mx-auto px-6 py-8 flex flex-col">
+      <div
+        className={`lg:hidden fixed inset-x-0 top-16 bottom-0 z-[60] bg-surface transition-opacity duration-200 ${
+          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden={!menuOpen}
+      >
+        <div className="absolute inset-0 overflow-y-auto overscroll-contain">
+          <nav id="mobile-navigation" className="max-w-7xl mx-auto px-6 py-8 pb-24 flex flex-col">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className={({ isActive }) =>
                   `text-2xl font-serif py-4 border-b border-border transition-colors ${
                     isActive ? "text-primary" : "text-ink"
@@ -101,7 +130,7 @@ export default function Navbar() {
             ))}
             <Link
               to="/visit"
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
               className="mt-8 bg-primary text-surface text-center text-sm tracking-[0.12em] uppercase py-4"
             >
               Book Appointment
@@ -112,7 +141,7 @@ export default function Navbar() {
             </div>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }
