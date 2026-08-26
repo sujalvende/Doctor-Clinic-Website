@@ -178,6 +178,20 @@ export const GALLERY_ITEMS = [
 
 export type AppointmentStatus = "pending" | "confirmed" | "rescheduled" | "cancelled" | "completed";
 
+/**
+ * How the appointment came to exist:
+ * - "website": the patient submitted the public booking form themselves.
+ * - "phone" / "whatsapp": an admin recorded a booking received through a
+ *   call or WhatsApp message on the patient's behalf.
+ */
+export type BookingSource = "website" | "phone" | "whatsapp";
+
+export const BOOKING_SOURCE_LABELS: Record<BookingSource, string> = {
+  website: "Website",
+  phone: "Phone",
+  whatsapp: "WhatsApp",
+};
+
 export interface Appointment {
   id: string;
   patient_name: string;
@@ -190,6 +204,7 @@ export interface Appointment {
   confirmed_time?: string;
   message: string;
   status: AppointmentStatus;
+  booking_source?: BookingSource;
   created_at: string;
   updated_at: string;
 }
@@ -203,7 +218,18 @@ function normalizeAppointment(raw: Appointment): Appointment {
     ...raw,
     confirmed_date: raw.confirmed_date || "",
     confirmed_time: raw.confirmed_time || "",
+    booking_source: raw.booking_source || "website",
   };
+}
+
+/** The date actually in effect for the appointment: confirmed if set, otherwise the patient's original request. */
+export function getAppointmentDate(appointment: Appointment): string {
+  return appointment.confirmed_date || appointment.preferred_date;
+}
+
+/** The time actually in effect for the appointment: confirmed if set, otherwise the patient's original request. */
+export function getAppointmentTime(appointment: Appointment): string {
+  return appointment.confirmed_time || appointment.preferred_time;
 }
 
 export function getAppointments(): Appointment[] {
@@ -215,19 +241,78 @@ export function getAppointments(): Appointment[] {
   }
 }
 
-export function saveAppointment(data: Omit<Appointment, "id" | "status" | "created_at" | "updated_at">): Appointment {
+export function saveAppointment(data: Omit<Appointment, "id" | "status" | "created_at" | "updated_at" | "booking_source">): Appointment {
   const appointments = getAppointments();
   const now = new Date().toISOString();
   const apt: Appointment = normalizeAppointment({
     ...data,
     id: `apt_${Date.now()}`,
     status: "pending",
+    booking_source: "website",
     created_at: now,
     updated_at: now,
   });
   appointments.push(apt);
   persistAppointments(appointments);
   return apt;
+}
+
+export interface ManualAppointmentInput {
+  patient_name: string;
+  phone: string;
+  email?: string;
+  service: string;
+  confirmed_date: string;
+  confirmed_time: string;
+  booking_source: BookingSource;
+  message?: string;
+}
+
+/**
+ * Records an appointment an admin creates directly (received by phone or
+ * WhatsApp). Reuses the same Appointment model and storage as patient
+ * bookings so it appears everywhere normal appointments do. The date/time
+ * the admin enters is treated as the confirmed schedule, not a pending
+ * request, so `preferred_date`/`preferred_time` are set to match it rather
+ * than left blank or misrepresented as a separate patient request.
+ */
+export function createManualAppointment(data: ManualAppointmentInput): Appointment {
+  const appointments = getAppointments();
+  const now = new Date().toISOString();
+  const apt: Appointment = normalizeAppointment({
+    id: `apt_${Date.now()}`,
+    patient_name: data.patient_name,
+    phone: data.phone,
+    email: data.email || "",
+    service: data.service,
+    preferred_date: data.confirmed_date,
+    preferred_time: data.confirmed_time,
+    confirmed_date: data.confirmed_date,
+    confirmed_time: data.confirmed_time,
+    message: data.message || "",
+    status: "confirmed",
+    booking_source: data.booking_source,
+    created_at: now,
+    updated_at: now,
+  });
+  appointments.push(apt);
+  persistAppointments(appointments);
+  return apt;
+}
+
+/** Finds another active (non-cancelled) appointment already booked at the same date and time. */
+export function findConflictingAppointment(date: string, time: string, excludeId?: string): Appointment | null {
+  if (!date || !time) return null;
+  const appointments = getAppointments();
+  return (
+    appointments.find(
+      (a) =>
+        a.id !== excludeId &&
+        a.status !== "cancelled" &&
+        getAppointmentDate(a) === date &&
+        getAppointmentTime(a) === time,
+    ) || null
+  );
 }
 
 export function updateAppointmentStatus(id: string, status: AppointmentStatus): void {

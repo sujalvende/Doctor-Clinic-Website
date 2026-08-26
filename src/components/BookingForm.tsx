@@ -71,9 +71,7 @@ export default function BookingForm({ onSuccess }: Props) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-7">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
         <div>
-          <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-            Full Name *
-          </label>
+          <label className="field-label">Full Name *</label>
           <input
             className={fieldCls}
             placeholder="Your full name"
@@ -83,9 +81,7 @@ export default function BookingForm({ onSuccess }: Props) {
           />
         </div>
         <div>
-          <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-            Phone Number *
-          </label>
+          <label className="field-label">Phone Number *</label>
           <input
             className={fieldCls}
             type="tel"
@@ -98,9 +94,7 @@ export default function BookingForm({ onSuccess }: Props) {
       </div>
 
       <div>
-        <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-          Email (optional)
-        </label>
+        <label className="field-label">Email (optional)</label>
         <input
           className={fieldCls}
           type="email"
@@ -111,9 +105,7 @@ export default function BookingForm({ onSuccess }: Props) {
       </div>
 
       <div>
-        <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-          Service / Consultation Type *
-        </label>
+        <label className="field-label">Service / Consultation Type *</label>
         <select
           className={`${fieldCls} cursor-pointer`}
           value={form.service}
@@ -131,9 +123,7 @@ export default function BookingForm({ onSuccess }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
         <div>
-          <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-            Preferred Date *
-          </label>
+          <label className="field-label">Preferred Date *</label>
           <input
             className={fieldCls}
             type="date"
@@ -144,9 +134,7 @@ export default function BookingForm({ onSuccess }: Props) {
           />
         </div>
         <div>
-          <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-            Preferred Time *
-          </label>
+          <label className="field-label">Preferred Time *</label>
           <input
             className={fieldCls}
             type="time"
@@ -158,9 +146,7 @@ export default function BookingForm({ onSuccess }: Props) {
       </div>
 
       <div>
-        <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-          Message (optional)
-        </label>
+        <label className="field-label">Message (optional)</label>
         <textarea
           className={`${fieldCls} resize-none`}
           rows={3}
@@ -170,11 +156,7 @@ export default function BookingForm({ onSuccess }: Props) {
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-primary text-surface py-4 text-xs tracking-[0.15em] uppercase hover:bg-primary-dark transition-colors disabled:opacity-60"
-      >
+      <button type="submit" disabled={loading} className="btn-primary w-full">
         {loading ? "Submitting…" : "Book Appointment"}
       </button>
     </form>

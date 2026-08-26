@@ -43,9 +43,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div>
-              <label className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-                Password
-              </label>
+              <label className="field-label">Password</label>
               <input
                 type="password"
                 className="w-full bg-transparent border-b border-border py-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-primary transition-colors"
@@ -61,11 +59,7 @@ export default function Login() {
               <p className="text-red-600 text-xs">{error}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-primary text-surface py-3.5 text-xs tracking-[0.15em] uppercase hover:bg-primary-dark transition-colors disabled:opacity-60"
-            >
+            <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>

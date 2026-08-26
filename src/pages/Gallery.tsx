@@ -41,7 +41,7 @@ export default function Gallery() {
     <>
       {/* Page header */}
       <div className="pt-28 pb-16 px-6 lg:px-10 max-w-7xl mx-auto border-b border-border">
-        <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Gallery</p>
+        <p className="eyebrow mb-4">Gallery</p>
         <h1 className="font-serif text-5xl lg:text-7xl text-ink">Gallery</h1>
       </div>
 

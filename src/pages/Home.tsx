@@ -46,7 +46,7 @@ export default function Home() {
       >
         {/* Text block */}
         <div className="flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 pt-28 pb-20 lg:pt-0 order-2 lg:order-1">
-          <p className="hero-el text-[10px] tracking-[0.25em] text-muted uppercase mb-7">
+          <p className="hero-el eyebrow mb-7">
             {CLINIC.name}
           </p>
           <h1 className="hero-el font-serif text-5xl sm:text-6xl lg:text-[5.5rem] text-ink leading-[1.03] mb-4">
@@ -60,16 +60,10 @@ export default function Home() {
             Compassionate care backed by experience, expertise, and a patient-first approach.
           </p>
           <div className="hero-el flex gap-3 flex-wrap">
-            <Link
-              to="/visit"
-              className="bg-primary text-surface text-xs tracking-[0.15em] uppercase px-7 py-4 hover:bg-primary-dark transition-colors"
-            >
+            <Link to="/visit" className="btn-primary">
               Book an Appointment
             </Link>
-            <Link
-              to="/about"
-              className="border border-ink/20 text-ink text-xs tracking-[0.15em] uppercase px-7 py-4 hover:bg-ink/5 transition-colors"
-            >
+            <Link to="/about" className="btn-secondary">
               Explore Profile
             </Link>
           </div>
@@ -102,7 +96,7 @@ export default function Home() {
       </section>
 
       {/* ── About Preview ── */}
-      <section className="py-24 lg:py-36 max-w-7xl mx-auto px-6 lg:px-10">
+      <section className="py-20 lg:py-28 max-w-7xl mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-2 gap-14 lg:gap-24 items-center">
           <div className="relative bg-ink/5">
             <img
@@ -112,7 +106,7 @@ export default function Home() {
             />
           </div>
           <div>
-            <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">About</p>
+            <p className="eyebrow mb-4">About</p>
             <h2 className="font-serif text-4xl lg:text-5xl text-ink mb-7 leading-tight">
               About {DOCTOR.fullName}
             </h2>
@@ -132,10 +126,7 @@ export default function Home() {
                 <dd className="text-ink text-sm font-medium">{DOCTOR.specialization}</dd>
               </div>
             </dl>
-            <Link
-              to="/about"
-              className="inline-flex items-center gap-2 text-primary text-sm font-medium group"
-            >
+            <Link to="/about" className="link-arrow group">
               Meet the Doctor
               <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -144,18 +135,15 @@ export default function Home() {
       </section>
 
       {/* ── Services Preview ── */}
-      <section className="py-24 lg:py-36 bg-surface">
+      <section className="py-20 lg:py-28 bg-surface">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="grid lg:grid-cols-[340px_1fr] gap-14 lg:gap-20">
             <div className="lg:sticky lg:top-28 self-start">
-              <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Expertise</p>
+              <p className="eyebrow mb-4">Expertise</p>
               <h2 className="font-serif text-4xl lg:text-5xl text-ink leading-tight mb-8">
                 Areas of Expertise
               </h2>
-              <Link
-                to="/services"
-                className="inline-flex items-center gap-2 text-primary text-sm font-medium group"
-              >
+              <Link to="/services" className="link-arrow group">
                 Explore Services
                 <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -178,7 +166,7 @@ export default function Home() {
       </section>
 
       {/* ── Facilities Preview ── */}
-      <section className="py-24 lg:py-36 max-w-7xl mx-auto px-6 lg:px-10">
+      <section className="py-20 lg:py-28 max-w-7xl mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-2 gap-14 lg:gap-24 items-center">
           {/* Photo grid */}
           <div className="grid grid-cols-2 gap-3">
@@ -207,7 +195,7 @@ export default function Home() {
 
           {/* Text */}
           <div>
-            <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Facilities</p>
+            <p className="eyebrow mb-4">Facilities</p>
             <h2 className="font-serif text-4xl lg:text-5xl text-ink mb-6 leading-tight">
               A Comfortable Place for Better Care
             </h2>
@@ -227,10 +215,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <Link
-              to="/facilities"
-              className="inline-flex items-center gap-2 text-primary text-sm font-medium group"
-            >
+            <Link to="/facilities" className="link-arrow group">
               Explore Facilities
               <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -239,12 +224,12 @@ export default function Home() {
       </section>
 
       {/* ── Visit / Book Preview ── */}
-      <section className="py-24 lg:py-36 bg-sage">
+      <section className="py-20 lg:py-28 bg-sage">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="grid lg:grid-cols-2 gap-14 lg:gap-20">
             {/* Clinic info */}
             <div>
-              <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Visit Us</p>
+              <p className="eyebrow mb-4">Visit Us</p>
               <h2 className="font-serif text-4xl lg:text-5xl text-ink mb-10 leading-tight">
                 Visit {DOCTOR.fullName}
               </h2>
@@ -292,10 +277,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <Link
-                to="/visit"
-                className="inline-flex items-center gap-2 text-primary text-sm font-medium group mt-10"
-              >
+              <Link to="/visit" className="link-arrow group mt-10">
                 Full directions & map
                 <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
               </Link>

@@ -15,7 +15,7 @@ export default function Services() {
     <>
       {/* Page header */}
       <div className="pt-28 pb-16 px-6 lg:px-10 max-w-7xl mx-auto border-b border-border">
-        <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">What We Offer</p>
+        <p className="eyebrow mb-4">What We Offer</p>
         <h1 className="font-serif text-5xl lg:text-7xl text-ink">Services</h1>
       </div>
 
@@ -89,10 +89,7 @@ export default function Services() {
               Reach out and {DOCTOR.fullName} will be in touch to confirm your appointment.
             </p>
           </div>
-          <Link
-            to="/visit"
-            className="flex-shrink-0 bg-primary text-surface text-xs tracking-[0.15em] uppercase px-8 py-4 hover:bg-primary-dark transition-colors inline-flex items-center gap-2 group"
-          >
+          <Link to="/visit" className="btn-primary flex-shrink-0 group">
             Book an Appointment
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </Link>

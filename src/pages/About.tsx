@@ -7,7 +7,7 @@ export default function About() {
     <>
       {/* Page header */}
       <div className="pt-28 pb-16 px-6 lg:px-10 max-w-7xl mx-auto border-b border-border">
-        <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Profile</p>
+        <p className="eyebrow mb-4">Profile</p>
         <h1 className="font-serif text-5xl lg:text-7xl text-ink">About {DOCTOR.fullName}</h1>
       </div>
 
@@ -57,10 +57,7 @@ export default function About() {
               </div>
             </dl>
 
-            <Link
-              to="/visit"
-              className="inline-flex items-center gap-2 text-primary text-sm font-medium group mt-10"
-            >
+            <Link to="/visit" className="link-arrow group mt-10">
               Book an Appointment
               <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -73,7 +70,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="grid lg:grid-cols-[340px_1fr] gap-14 lg:gap-20">
             <div>
-              <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Journey</p>
+              <p className="eyebrow mb-4">Journey</p>
               <h2 className="font-serif text-4xl lg:text-5xl text-ink leading-tight">
                 Professional Journey
               </h2>
@@ -104,7 +101,7 @@ export default function About() {
       <section className="py-20 lg:py-28 max-w-7xl mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-[340px_1fr] gap-14 lg:gap-20">
           <div>
-            <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Expertise</p>
+            <p className="eyebrow mb-4">Expertise</p>
             <h2 className="font-serif text-4xl lg:text-5xl text-ink leading-tight">
               Areas of Expertise
             </h2>
@@ -136,7 +133,7 @@ export default function About() {
       <section className="py-20 lg:py-28 max-w-7xl mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <div>
-            <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">The Clinic</p>
+            <p className="eyebrow mb-4">The Clinic</p>
             <h2 className="font-serif text-4xl lg:text-5xl text-ink mb-8 leading-tight">
               {CLINIC.name}
             </h2>
@@ -146,10 +143,7 @@ export default function About() {
             <p className="text-muted text-base leading-relaxed mb-10">
               [Second paragraph about the clinic's approach to patient experience — appointment availability, wait times, privacy, follow-up care, and any additional features.]
             </p>
-            <Link
-              to="/facilities"
-              className="inline-flex items-center gap-2 text-primary text-sm font-medium group"
-            >
+            <Link to="/facilities" className="link-arrow group">
               Explore Facilities
               <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </Link>

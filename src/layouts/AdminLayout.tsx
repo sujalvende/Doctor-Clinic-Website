@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router";
+import { Link, Outlet, NavLink, useNavigate } from "react-router";
 import { LayoutDashboard, LogOut } from "lucide-react";
 import { CLINIC, DOCTOR } from "../data/content";
 
@@ -16,10 +16,10 @@ export default function AdminLayout() {
       <div className="lg:hidden sticky top-0 z-20 bg-surface/95 backdrop-blur-sm border-b border-border px-4 py-4">
         <p className="text-[10px] tracking-[0.2em] text-muted uppercase mb-0.5">{CLINIC.name}</p>
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-serif text-lg text-ink leading-tight">{DOCTOR.fullName}</p>
+          <Link to="/" className="group">
+            <p className="font-serif text-lg text-ink leading-tight group-hover:text-primary transition-colors">{DOCTOR.fullName}</p>
             <p className="text-xs text-muted mt-1">Admin Dashboard</p>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={handleLogout}
@@ -35,7 +35,9 @@ export default function AdminLayout() {
       <aside className="hidden lg:flex w-60 shrink-0 bg-surface border-r border-border flex-col">
         <div className="px-6 py-6 border-b border-border">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase mb-0.5">{CLINIC.name}</p>
-          <p className="font-serif text-lg text-ink leading-tight">{DOCTOR.fullName}</p>
+          <Link to="/" className="group inline-block">
+            <p className="font-serif text-lg text-ink leading-tight group-hover:text-primary transition-colors">{DOCTOR.fullName}</p>
+          </Link>
           <p className="text-xs text-muted mt-1">Admin Dashboard</p>
         </div>
 

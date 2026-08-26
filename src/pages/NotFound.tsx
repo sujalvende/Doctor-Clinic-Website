@@ -11,10 +11,7 @@ export default function NotFound() {
       <p className="text-muted text-base max-w-sm mb-10">
         The page you are looking for does not exist or has been moved.
       </p>
-      <Link
-        to="/"
-        className="inline-flex items-center gap-2 bg-primary text-surface text-xs tracking-[0.15em] uppercase px-8 py-4 hover:bg-primary-dark transition-colors group"
-      >
+      <Link to="/" className="btn-primary group">
         Return Home
         <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
       </Link>

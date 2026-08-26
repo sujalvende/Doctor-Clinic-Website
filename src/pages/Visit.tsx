@@ -7,7 +7,7 @@ export default function Visit() {
     <>
       {/* Page header */}
       <div className="pt-28 pb-16 px-6 lg:px-10 max-w-7xl mx-auto border-b border-border">
-        <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">How to Reach Us</p>
+        <p className="eyebrow mb-4">How to Reach Us</p>
         <h1 className="font-serif text-5xl lg:text-7xl text-ink">Plan Your Visit</h1>
       </div>
 
@@ -123,7 +123,7 @@ export default function Visit() {
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
           <div className="grid lg:grid-cols-[340px_1fr] gap-14 lg:gap-20">
             <div>
-              <p className="text-[10px] tracking-[0.25em] text-muted uppercase mb-4">Appointments</p>
+              <p className="eyebrow mb-4">Appointments</p>
               <h2 className="font-serif text-4xl lg:text-5xl text-ink mb-6 leading-tight">
                 Book an Appointment
               </h2>

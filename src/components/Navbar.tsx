@@ -58,13 +58,27 @@ export default function Navbar() {
   }, [location.pathname, closeMenu]);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-surface/96 backdrop-blur-md border-b border-border"
-          : "bg-transparent"
-      }`}
-    >
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/*
+        Decorative scroll-tinted background layer, isolated from the
+        interactive header content. `backdrop-filter` on an ancestor
+        creates a new containing block for `position: fixed` descendants
+        (per spec, same as `filter`/`transform`), which was silently
+        re-anchoring the fixed mobile menu once `scrolled` turned on and
+        interfering with hit-testing on the hamburger button. Keeping the
+        blur on this non-interactive sibling (not an ancestor of the nav
+        content) preserves the exact same visual effect without altering
+        the containing block for any fixed descendant.
+      */}
+      <div
+        aria-hidden="true"
+        className={`absolute inset-0 -z-10 pointer-events-none transition-all duration-500 ${
+          scrolled
+            ? "bg-surface/96 backdrop-blur-md border-b border-border"
+            : "bg-transparent"
+        }`}
+      />
+
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 lg:h-20 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex-shrink-0 group" onClick={closeMenu}>
@@ -93,10 +107,7 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
-          <Link
-            to="/visit"
-            className="ml-2 bg-primary text-surface text-xs tracking-[0.12em] uppercase px-6 py-2.5 hover:bg-primary-dark transition-colors"
-          >
+          <Link to="/visit" className="btn-primary-sm ml-2">
             Book Appointment
           </Link>
         </nav>
@@ -137,11 +148,7 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <Link
-              to="/visit"
-              onClick={closeMenu}
-              className="mt-8 bg-primary text-surface text-center text-sm tracking-[0.12em] uppercase py-4"
-            >
+            <Link to="/visit" onClick={closeMenu} className="btn-primary mt-8 w-full">
               Book Appointment
             </Link>
             <div className="mt-10 pt-8 border-t border-border">

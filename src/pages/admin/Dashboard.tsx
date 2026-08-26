@@ -4,8 +4,15 @@ import {
   getAppointments,
   updateAppointmentStatus,
   rescheduleAppointment,
+  createManualAppointment,
+  findConflictingAppointment,
+  getAppointmentDate as getScheduledDate,
+  getAppointmentTime as getScheduledTime,
+  BOOKING_SOURCE_LABELS,
+  SERVICES,
   type Appointment,
   type AppointmentStatus,
+  type BookingSource,
 } from "../../data/content";
 import {
   Calendar,
@@ -16,14 +23,15 @@ import {
   Check,
   X,
   MoreHorizontal,
+  Plus,
 } from "lucide-react";
 
 const STATUS_CONFIG: Record<AppointmentStatus, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "bg-yellow-50 text-yellow-800 border-yellow-200" },
-  confirmed: { label: "Confirmed", color: "bg-green-50 text-green-800 border-green-200" },
-  rescheduled: { label: "Rescheduled", color: "bg-blue-50 text-blue-800 border-blue-200" },
-  cancelled: { label: "Cancelled", color: "bg-red-50 text-red-800 border-red-200" },
-  completed: { label: "Completed", color: "bg-gray-50 text-gray-600 border-gray-200" },
+  pending: { label: "Pending", color: "bg-yellow-50 text-yellow-800" },
+  confirmed: { label: "Confirmed", color: "bg-green-50 text-green-800" },
+  rescheduled: { label: "Rescheduled", color: "bg-blue-50 text-blue-800" },
+  cancelled: { label: "Cancelled", color: "bg-red-50 text-red-800" },
+  completed: { label: "Completed", color: "bg-gray-100 text-gray-600" },
 };
 
 const STATUS_FILTERS: Array<{ key: string; label: string }> = [
@@ -34,13 +42,6 @@ const STATUS_FILTERS: Array<{ key: string; label: string }> = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-function getScheduledDate(appointment: Appointment) {
-  return appointment.confirmed_date || appointment.preferred_date;
-}
-
-function getScheduledTime(appointment: Appointment) {
-  return appointment.confirmed_time || appointment.preferred_time;
-}
 
 function formatDate(iso: string) {
   if (!iso) return "—";
@@ -70,7 +71,7 @@ function formatTime(time: string) {
 function StatusBadge({ status }: { status: AppointmentStatus }) {
   const { label, color } = STATUS_CONFIG[status];
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 text-[11px] border font-medium rounded ${color}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium rounded ${color}`}>
       {label}
     </span>
   );
@@ -112,7 +113,7 @@ function ActionButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${toneClass}`}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${toneClass}`}
     >
       <Icon size={16} />
     </button>
@@ -236,18 +237,19 @@ function AppointmentDetails({
 }) {
   const scheduledDate = getScheduledDate(appointment);
   const scheduledTime = getScheduledTime(appointment);
+  const hasConfirmedSchedule = Boolean(appointment.confirmed_date && appointment.confirmed_time);
+  const requestDiffersFromSchedule =
+    appointment.preferred_date !== scheduledDate || appointment.preferred_time !== scheduledTime;
+  const bookingSource = appointment.booking_source || "website";
+  const isAdminRecorded = bookingSource !== "website";
 
-  const fields = [
+  const patientFields = [
     { label: "Phone", value: appointment.phone },
     { label: "Email", value: appointment.email || "—" },
-    { label: "Service", value: appointment.service },
-    { label: "Client Requested Date", value: formatDateOnly(appointment.preferred_date) },
-    { label: "Client Requested Time", value: formatTime(appointment.preferred_time) },
-    { label: "Confirmed Date", value: appointment.confirmed_date ? formatDateOnly(appointment.confirmed_date) : "Not scheduled yet" },
-    { label: "Confirmed Time", value: appointment.confirmed_time ? formatTime(appointment.confirmed_time) : "Not scheduled yet" },
-    { label: "Current Scheduled Date", value: formatDateOnly(scheduledDate) },
-    { label: "Current Scheduled Time", value: formatTime(scheduledTime) },
-    { label: "Message", value: appointment.message || "—" },
+  ];
+
+  const additionalFields = [
+    { label: isAdminRecorded ? "Admin notes" : "Message", value: appointment.message || "—" },
     { label: "Submitted", value: formatDate(appointment.created_at) },
   ];
 
@@ -285,18 +287,71 @@ function AppointmentDetails({
       </div>
 
       <div className={mobile ? "p-5" : ""}>
-        <div className="flex flex-col gap-5">
-          <StatusBadge status={appointment.status} />
+        <StatusBadge status={appointment.status} />
 
-          {fields.map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">{label}</p>
-              <p className="text-ink text-sm leading-relaxed break-words">{value}</p>
-            </div>
-          ))}
+        {/* Patient */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Patient</p>
+          <div className="flex flex-col gap-4">
+            {patientFields.map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">{label}</p>
+                <p className="text-ink text-sm leading-relaxed break-words">{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border">
+        {/* Appointment */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Appointment</p>
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">Service</p>
+              <p className="text-ink text-sm leading-relaxed break-words">{appointment.service}</p>
+            </div>
+            <div>
+              <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">Date</p>
+              <p className="text-ink text-sm leading-relaxed">{formatDateOnly(scheduledDate)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">Time</p>
+              <p className="text-ink text-sm leading-relaxed">{formatTime(scheduledTime)}</p>
+            </div>
+            {!hasConfirmedSchedule && (
+              <p className="text-muted text-xs">As requested by the patient — not yet confirmed.</p>
+            )}
+            {hasConfirmedSchedule && requestDiffersFromSchedule && (
+              <div>
+                <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">Originally requested</p>
+                <p className="text-muted text-sm leading-relaxed">
+                  {formatDateOnly(appointment.preferred_date)} at {formatTime(appointment.preferred_time)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Booking source */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">Booking Source</p>
+          <p className="text-ink text-sm leading-relaxed">{BOOKING_SOURCE_LABELS[bookingSource]}</p>
+        </div>
+
+        {/* Additional details */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Additional details</p>
+          <div className="flex flex-col gap-4">
+            {additionalFields.map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-1">{label}</p>
+                <p className="text-ink text-sm leading-relaxed break-words">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-border">
           <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-3">Actions</p>
           <div className="flex flex-col gap-2">
             {appointment.status !== "confirmed" && appointment.status !== "rescheduled" && (
@@ -402,7 +457,8 @@ function RescheduleModal({
         <div className="flex items-start justify-between gap-4 px-5 sm:px-6 py-5 border-b border-border">
           <div>
             <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-2">Appointment</p>
-            <h2 id="reschedule-title" className="font-serif text-2xl text-ink">Reschedule</h2>
+            <h2 id="reschedule-title" className="font-serif text-2xl text-ink mb-1">Reschedule appointment</h2>
+            <p className="text-muted text-sm">Choose a new date and time. The patient's original request stays on file.</p>
           </div>
           <button
             type="button"
@@ -438,8 +494,8 @@ function RescheduleModal({
             <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">New Appointment</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
               <div>
-                <label htmlFor="reschedule-date" className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-                  New Date
+                <label htmlFor="reschedule-date" className="field-label">
+                  New date
                 </label>
                 <input
                   id="reschedule-date"
@@ -451,8 +507,8 @@ function RescheduleModal({
                 />
               </div>
               <div>
-                <label htmlFor="reschedule-time" className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
-                  New Time
+                <label htmlFor="reschedule-time" className="field-label">
+                  New time
                 </label>
                 <input
                   id="reschedule-time"
@@ -479,12 +535,316 @@ function RescheduleModal({
               type="button"
               onClick={onSave}
               disabled={saving || !value.date || !value.time}
-              className="min-h-11 px-5 py-3 bg-primary text-surface text-sm tracking-[0.08em] uppercase hover:bg-primary-dark transition-colors disabled:opacity-60"
+              className="min-h-11 px-5 py-3 bg-primary text-surface text-sm font-medium hover:bg-primary-dark transition-colors disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save Rescheduled Time"}
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+const BOOKING_SOURCE_OPTIONS: Array<{ value: BookingSource; label: string }> = [
+  { value: "phone", label: "Phone" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "website", label: "Website" },
+];
+
+interface NewAppointmentForm {
+  patient_name: string;
+  phone: string;
+  email: string;
+  booking_source: BookingSource;
+  service: string;
+  date: string;
+  time: string;
+  notes: string;
+}
+
+const EMPTY_NEW_APPOINTMENT: NewAppointmentForm = {
+  patient_name: "",
+  phone: "",
+  email: "",
+  booking_source: "phone",
+  service: "",
+  date: "",
+  time: "",
+  notes: "",
+};
+
+type NewAppointmentErrors = Partial<Record<keyof NewAppointmentForm, string>>;
+
+function NewAppointmentModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (message: string) => void;
+}) {
+  const [form, setForm] = useState<NewAppointmentForm>(EMPTY_NEW_APPOINTMENT);
+  const [errors, setErrors] = useState<NewAppointmentErrors>({});
+  const [conflict, setConflict] = useState<Appointment | null>(null);
+  const [saving, setSaving] = useState(false);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstFieldRef.current?.focus();
+
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  function set(field: keyof NewAppointmentForm) {
+    return (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setForm((f) => ({ ...f, [field]: value }));
+      setErrors((e) => ({ ...e, [field]: undefined }));
+      if (field === "date" || field === "time") setConflict(null);
+    };
+  }
+
+  function validate(): boolean {
+    const nextErrors: NewAppointmentErrors = {};
+    if (!form.patient_name.trim()) nextErrors.patient_name = "Enter the patient's name.";
+    if (!form.phone.trim()) nextErrors.phone = "Enter a phone number.";
+    if (!form.service) nextErrors.service = "Select a service.";
+    if (!form.date) nextErrors.date = "Choose a date.";
+    if (!form.time) nextErrors.time = "Choose a time.";
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!validate()) return;
+
+    if (!conflict) {
+      const existing = findConflictingAppointment(form.date, form.time);
+      if (existing) {
+        setConflict(existing);
+        return;
+      }
+    }
+
+    setSaving(true);
+    window.setTimeout(() => {
+      createManualAppointment({
+        patient_name: form.patient_name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        service: form.service,
+        confirmed_date: form.date,
+        confirmed_time: form.time,
+        booking_source: form.booking_source,
+        message: form.notes.trim(),
+      });
+      setSaving(false);
+      onCreated("Appointment created successfully.");
+    }, 250);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/35 p-0 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-appointment-title"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-surface border border-border shadow-sm max-h-[100dvh] overflow-y-auto"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 px-5 sm:px-6 py-5 border-b border-border">
+          <div>
+            <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-2">Appointments</p>
+            <h2 id="new-appointment-title" className="font-serif text-2xl text-ink mb-1">New appointment</h2>
+            <p className="text-muted text-sm">Record a booking made by phone or WhatsApp.</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Close new appointment dialog"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate className="px-5 sm:px-6 py-5 sm:py-6 flex flex-col gap-7">
+          <div>
+            <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Patient</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="new-apt-name" className="field-label">Patient name *</label>
+                <input
+                  ref={firstFieldRef}
+                  id="new-apt-name"
+                  className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors"
+                  value={form.patient_name}
+                  onChange={set("patient_name")}
+                  aria-invalid={Boolean(errors.patient_name)}
+                  aria-describedby={errors.patient_name ? "new-apt-name-error" : undefined}
+                />
+                {errors.patient_name && (
+                  <p id="new-apt-name-error" className="text-red-600 text-xs mt-1.5">{errors.patient_name}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="new-apt-phone" className="field-label">Phone number *</label>
+                <input
+                  id="new-apt-phone"
+                  type="tel"
+                  className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors"
+                  value={form.phone}
+                  onChange={set("phone")}
+                  aria-invalid={Boolean(errors.phone)}
+                  aria-describedby={errors.phone ? "new-apt-phone-error" : undefined}
+                />
+                {errors.phone && (
+                  <p id="new-apt-phone-error" className="text-red-600 text-xs mt-1.5">{errors.phone}</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-5">
+              <label htmlFor="new-apt-email" className="field-label">Email (optional)</label>
+              <input
+                id="new-apt-email"
+                type="email"
+                className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors"
+                value={form.email}
+                onChange={set("email")}
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-border">
+            <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Appointment</p>
+            <div className="flex flex-col gap-5">
+              <div>
+                <label htmlFor="new-apt-service" className="field-label">Service *</label>
+                <select
+                  id="new-apt-service"
+                  className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                  value={form.service}
+                  onChange={set("service")}
+                  aria-invalid={Boolean(errors.service)}
+                  aria-describedby={errors.service ? "new-apt-service-error" : undefined}
+                >
+                  <option value="">Select a service</option>
+                  {SERVICES.map((s) => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+                {errors.service && (
+                  <p id="new-apt-service-error" className="text-red-600 text-xs mt-1.5">{errors.service}</p>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label htmlFor="new-apt-date" className="field-label">Date *</label>
+                  <input
+                    id="new-apt-date"
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors"
+                    value={form.date}
+                    onChange={set("date")}
+                    aria-invalid={Boolean(errors.date)}
+                    aria-describedby={errors.date ? "new-apt-date-error" : undefined}
+                  />
+                  {errors.date && (
+                    <p id="new-apt-date-error" className="text-red-600 text-xs mt-1.5">{errors.date}</p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="new-apt-time" className="field-label">Time *</label>
+                  <input
+                    id="new-apt-time"
+                    type="time"
+                    className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink focus:outline-none focus:border-primary transition-colors"
+                    value={form.time}
+                    onChange={set("time")}
+                    aria-invalid={Boolean(errors.time)}
+                    aria-describedby={errors.time ? "new-apt-time-error" : undefined}
+                  />
+                  {errors.time && (
+                    <p id="new-apt-time-error" className="text-red-600 text-xs mt-1.5">{errors.time}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-border">
+            <p className="text-[10px] tracking-[0.15em] text-muted uppercase mb-4">Booking source</p>
+            <div className="flex gap-2">
+              {BOOKING_SOURCE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, booking_source: option.value }))}
+                  aria-pressed={form.booking_source === option.value}
+                  className={`min-h-10 flex-1 px-4 py-2 text-xs tracking-wide border transition-colors ${
+                    form.booking_source === option.value
+                      ? "bg-primary text-surface border-primary"
+                      : "border-border text-ink/60 hover:text-ink"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-border">
+            <label htmlFor="new-apt-notes" className="field-label">Admin notes (optional)</label>
+            <textarea
+              id="new-apt-notes"
+              rows={3}
+              placeholder="e.g. Patient called requesting an afternoon appointment."
+              className="w-full bg-transparent border-b border-border py-2.5 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-primary transition-colors resize-none"
+              value={form.notes}
+              onChange={set("notes")}
+            />
+          </div>
+
+          {conflict && (
+            <div role="alert" className="border-l-2 border-yellow-500 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+              {conflict.patient_name} already has an appointment at this date and time. Creating this one will not move or cancel the existing appointment.
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="min-h-11 px-5 py-3 border border-border text-sm text-ink hover:bg-cream transition-colors disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="min-h-11 px-5 py-3 bg-primary text-surface text-sm font-medium hover:bg-primary-dark transition-colors disabled:opacity-60"
+            >
+              {saving ? "Creating…" : conflict ? "Create anyway" : "Create Appointment"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -499,6 +859,7 @@ export default function Dashboard() {
   const [rescheduleValue, setRescheduleValue] = useState({ date: "", time: "" });
   const [savingReschedule, setSavingReschedule] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [creatingAppointment, setCreatingAppointment] = useState(false);
 
   const load = useCallback(() => {
     setAppointments(
@@ -592,13 +953,23 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 xl:p-10 overflow-x-hidden">
-      <div className="mb-8 lg:mb-10">
-        <h1 className="font-serif text-3xl text-ink mb-1">Appointments</h1>
-        <p className="text-muted text-sm">Manage and update patient appointment requests.</p>
+      <div className="mb-8 lg:mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl text-ink mb-1">Appointments</h1>
+          <p className="text-muted text-sm">Manage and update patient appointment requests.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCreatingAppointment(true)}
+          className="inline-flex items-center justify-center gap-2 min-h-11 px-5 py-3 bg-primary text-surface text-sm font-medium hover:bg-primary-dark transition-colors self-start"
+        >
+          <Plus size={16} />
+          New appointment
+        </button>
       </div>
 
       {successMessage && (
-        <div className="mb-6 border border-border bg-surface px-4 py-3 text-sm text-ink">
+        <div role="status" className="mb-6 border-l-2 border-primary bg-surface px-4 py-3 text-sm text-ink">
           {successMessage}
         </div>
       )}
@@ -632,7 +1003,7 @@ export default function Dashboard() {
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="w-full sm:w-auto sm:min-w-[220px]">
-            <label htmlFor="appointment-date-filter" className="block text-[10px] tracking-[0.15em] text-muted uppercase mb-2">
+            <label htmlFor="appointment-date-filter" className="field-label">
               Filter by date
             </label>
             <input
@@ -820,6 +1191,17 @@ export default function Dashboard() {
             }
           }}
           onSave={saveReschedule}
+        />
+      )}
+
+      {creatingAppointment && (
+        <NewAppointmentModal
+          onClose={() => setCreatingAppointment(false)}
+          onCreated={(message) => {
+            load();
+            setCreatingAppointment(false);
+            setSuccessMessage(message);
+          }}
         />
       )}
     </div>
