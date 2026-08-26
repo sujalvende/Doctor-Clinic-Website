@@ -100,3 +100,24 @@ body {
     @apply inline-flex items-center gap-2 text-sm font-medium text-primary;
   }
 }
+
+/* Purely decorative hero scroll cue. Disabled automatically under reduced-motion. */
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(200%);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .animate-scroll-cue {
+    animation: scroll-cue 1.8s ease-in-out infinite;
+  }
+}
